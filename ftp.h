@@ -2,7 +2,7 @@
 
 #define _FTP_H_
 
-
+char const banner[]="Welcome to the VulnFTP-0.0.1";
 
 int abor();
 int acct();
