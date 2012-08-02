@@ -214,8 +214,7 @@ class FtpServer{
 
 		// CLASS CriticialSection
 
-		class CriticialSection
-		{
+		class CriticialSection{
 			public:
 				bool Initialize(){
 					pthread_mutex_init(&m_CS, NULL);
@@ -298,4 +297,66 @@ class FtpServer{
 		bool bEnableFXP;
 
 };
+
+// FtpServer::UserEntry CLASS
+// brief FtpServer::UserEntry class
+// One instance of this class will be allocated for each user.
+class FtpServer::UserEntry
+{
+	public:
+		UserEntry();
+		~UserEntry(){}
+
+		friend class FtpServer;
+		friend class FtpServer::ClientEntry;
+		// Set the Privileges of a User
+		// ucPriv: the user's privileges separated by the bitwise inclusive binary operator "|"
+		// return: true on success
+		// 		  false on error
+		bool SetPrivileges(unsigned char ucPriv);
+		// Get a User's privileges
+		// return: the user's privileges concatenated with the bitwise inclusive binary operator "|"
+		unsigned char GetPrivileges()const{return ucPrivileges;}
+		// Get the number of Clients logged-in as the User
+		// return: the number of Clients
+		unsigned int GetNumberOfClient()const{return uiNumberOfClient;}
+		// Set the maximum number of Clients which can be logged in as the User at the same time
+		// uiMax: the number of clients
+		void SetMaxNumberOfClient(unsigned int uiMax){uiMaxNumberOfClient=uiMax;}
+		// Get the maximum number of Clients which can be logged in as the User at the same time
+		// return: the number of clients
+		unsigned int GetMaxClient()const{return uiMaxNumberOfClient;}
+		// Get a pointer to the User's Name
+		// return: A pointer to the User's Name
+		const char *GetLogin()const{return szLogin;}
+		// Get a pointer to the User's Password
+		// return: A pointer to the User's Password
+		const char *GetPassword()const{return szPassword;}
+		// Get a pointer to the User's Start Directory
+		// return: A pointer to the User's Start Directory
+		const char *GetStartDirectory()const{return szStartDirectory;}
+		// Set the supported Extra-Commands of a User
+		// dExtraCmd: the user's Extra-Commands concatenated with the bitwise inclusive binary operator "|"
+		// return: true on success
+		//         false on error
+		bool SetExtraCommand(unsigned char dExtraCmd);
+		// * Get the supported Extra-Commands of a User.
+		// * @return  The user's Extra-Commands concatenated with the bitwise inclusive binary operator "|".
+		unsigned char GetExtraCommand()const{return ucExtraCommand;}
+
+	private:
+
+		unsigned char ucExtraCommand;
+		class UserEntry *pPrevUser, *pNextUser;
+		bool bDelete;
+		bool bIsEnabled;
+		FtpServer *pFtpServer;
+		unsigned char ucPrivileges;
+		char szLogin[ MaxLoginLen + 1 ];
+		char szPassword[ MaxPasswordLen + 1 ];
+		char szStartDirectory[ MaxRootPathLen + 1 ];
+		unsigned int uiNumberOfClient, uiMaxNumberOfClient;
+};
+
+
 #endif
