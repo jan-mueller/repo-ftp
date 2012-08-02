@@ -211,6 +211,91 @@ class FtpServer{
 		OnServerEventCallback_t _OnServerEventCb;
 		OnUserEventCallback_t _OnUserEventCb;
 		OnClientEventCallback_t _OnClientEventCb;
-		
+
+		// CLASS CriticialSection
+
+		class CriticialSection
+		{
+			public:
+				bool Initialize(){
+					pthread_mutex_init(&m_CS, NULL);
+					return true;
+				}
+				bool Enter(){
+					pthread_mutex_lock(&m_CS);
+					return true;
+				}
+				bool Leave(){
+					pthread_mutex_unlock(&m_CS);
+					return true;
+				}
+				bool Destroy(){
+					pthread_mutex_destroy( &m_CS );
+					return true;
+				}
+			private:
+				pthread_mutex_t m_CS;
+		}FtpServerLock;
+
+		// USER
+
+		enum{
+			MaxLoginLen=16,
+			MaxPasswordLen=16,
+			MaxRootPathLen=MAX_PATH
+		};
+
+		class CCriticialSection UserListLock;
+		class CUserEntry *pFirstUser, *pLastUser;
+		// warning  MUST lock the UserListLock before calling this function
+		CUserEntry *SearchUserFromLogin(const char *pszName);
+
+		// CLIENT
+
+		// Add a new Client.
+		// return: on success a pointer to the new ClientEntry class
+		//         on error NULL
+		FtpServer::ClientEntry *AddClient(SOCKET Sock, struct sockaddr_in *Sin);
+
+		class CriticialSection ClientListLock;
+		class ClientEntry *pFirstClient, *pLastClient;
+
+		// Network
+
+		volatile SOCKET ListeningSock;
+
+		struct{
+			unsigned short int usLen, usStart;
+		}DataPortRange;
+
+		bool bIsListening;
+		bool bIsAccepting;
+		unsigned short int usListeningPort;
+
+		pthread_t AcceptingThreadID;
+		static void *StartAcceptingEx( void *pvParam );
+		pthread_attr_t m_pattrServer;
+		pthread_attr_t m_pattrClient;
+		pthread_attr_t m_pattrTransfer;
+
+		// FILE
+
+		// Simplify a Path
+		static bool SimplifyPath(char *pszPath);
+
+		// STATISTIC
+
+		unsigned int uiNumberOfUser;
+		unsigned int uiNumberOfClient;
+
+		// CONFIG
+
+		unsigned int uiMaxPasswordTries;
+		unsigned int uiCheckPassDelay;
+		unsigned long int ulNoTransferTimeout, ulNoLoginTimeout;
+		unsigned int uiTransferBufferSize, uiTransferSocketBufferSize;
+
+		bool bEnableFXP;
+
 };
 #endif
