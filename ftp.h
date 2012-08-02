@@ -2,37 +2,215 @@
 
 #define _FTP_H_
 
-char const banner[]="Welcome to the VulnFTP-0.0.1";
+class FtpServer{
+	public:
+		// CONSTRUCTOR / DESTRUCTOR
 
-/* FTP Command tokens */
-enum command_types{ 
-	USER, PASS, ACCT, CWD, CDUP, SMNT, REIN, QUIT, PORT, PASV, TYPE, STRU, MODE, 
-	RETR, STOR, STOU, APPE, ALLO, REST, RNFR, RNTO, ABOR, DELE, RMD, MKD, PWD, 
-	LIST, NLST, SITE, SIZE, SYST, STAT, HELP, NOOP, EOFC, ERROR,
+		FtpServer();
+		~FtpServer();
+
+		class UserEntry;
+		class ClientEntry;
+
+		friend class UserEntry;
+		friend class ClientEntry;
+
+	private:
+		class EnumFileInfo;
+		class CriticialSection;
+
+	public:
+		// START / STOP
+		
+		// Ask server for listening on port supplied by SetPort()
+		// ulAddr: Address the Server will isten on
+		// usPort: Port the Server will listen
+		// return: true on success
+		// 		  false on error  
+		bool StartListening(unsigned long ulAddr, unsigned short int usPort);
+		// Ask server for stop listening
+		// return: true on success
+		// 		  false on error
+		bool StopListening();
+		// Check if server is listening
+		// return: true if Server is listening
+		// 		  false otherwise
+		bool IsListening()const{return bIsListening;}
+		// Ask server for accepting clients
+		// return: true on success
+		// 		  false on error
+		bool StartAccepting();
+		// Check if server is accepting clients
+		// return: true on success
+		// 		  false on error
+		bool IsAccepting()const{return bIsAccepting;}
+
+		// CONFIG
+
+		// Get TCP port on which the server is listening
+		// return: Port number
+		unsigned short GetListeningPort()const{return usListeningPort;}
+		// Set portrange the server can use to send and receive data
+		// usStart: the first port
+		// uiLen: number of ports
+		// return: true on success
+		// 		  false on error  
+		bool SetDataPortRange(unsigned short int usStart, unsigned short int uiLen);
+		// Get portrange the server can use to send and receive data
+		// usStart: Pointer to the first port
+		// uiLen: Pointer to the number of ports
+		// return: true on success
+		// 		  false on error  
+		bool GetDataPortRange(unsigned short int *usStart, unsigned short int *usLen);
+		// Set the time in which a user has to login
+		// ulSecond: timeout delay in seconds
+		void SetNoLoginTimeout(unsigned long int ulSecond){ulNoLoginTimeout=ulSecond;}
+		// Get the time in which a user has to login
+		// return: timeout delay in seconds
+		unsigned long int GetNoLoginTimeout()const{return ulNoLoginTimeout;}
+		// Set the no transfer (list, download or upload) timeout
+		// ulSecond timeout delay in seconds
+		void SetNoTransferTimeout(unsigned long int ulSecond){ulNoTransferTimeout=ulSecond;}
+		// Get the no transfer (list, download or upload) timeout
+		// return: timeout delay in seconds
+		unsigned long int GetNoTransferTimeout()const{return ulNoTransferTimeout;}
+		// Set the delay the server will wait when checking for the client's pass
+		// ulMilliSecond: the timeout delay in milliseconds
+		void SetCheckPassDelay(unsigned int ulMilliSecond){uiCheckPassDelay=ulMilliSecond;}
+		// Get the delay the server will wait when checking for the client's pass
+		// return: the timeout delay in milliseconds
+		unsigned int GetCheckPassDelay()const{return uiCheckPassDelay;}
+		// Set the max allowed password tries per client
+		// uiMaxPassTries: the max allowed password tries
+		void SetMaxPasswordTries(unsigned int uiMaxPassTries){uiMaxPasswordTries=uiMaxPassTries;}
+		// Get the max allowed password tries per client
+		// return: the max allowed password tries per client
+		unsigned int GetMaxPasswordTries()const{return uiMaxPasswordTries;}
+		// Enable or disable server-to-server transfer
+		// bEnable: true to enable, and false to disable
+		void EnableFXP(bool bEnable){bEnableFXP=bEnable;}
+		// Check if server-to-server transfer is enabled
+		//	return: true on success
+		// 		  false on error  
+		bool IsFXPEnabled()const{return bEnableFXP;}
+		// Set the size of the file transfer and directory listing buffer which
+		// will be allocated for each client
+		// uiSize: the transfer buffer size
+		void SetTransferBufferSize(unsigned int uiSize){uiTransferBufferSize=uiSize;}
+		// Get the size of the file transfer and directory listing buffer which
+		// will be allocated for each client
+		// return: the transfer buffer size
+		unsigned int GetTransferBufferSize()const{return uiTransferBufferSize;}
+		// Set the size of the file transfer and directory listing socket buffer which 
+		// will be allocated for each client
+		// uiSize: the transfer socket buffer size
+		void SetTransferSocketBufferSize(unsigned int uiSize){uiTransferSocketBufferSize=uiSize;}
+
+		// STATISTICS
+
+		// Get number of clients connected to the server
+		// return: number of clients
+		unsigned int GetNbClient() const { return uiNumberOfClient; }
+		// Get number of existing users
+		// return: number of users
+		unsigned int GetNbUser() const { return uiNumberOfUser; }
+
+		// EVENTS
+
+		// Enum the events that can be send to the events callback
+		enum eEvents {
+			// User events
+			NEW_USER,
+			DELETE_USER,
+			// Client events
+			NEW_CLIENT,
+			DELETE_CLIENT,
+			CLIENT_DISCONNECT,
+			CLIENT_AUTH,
+			CLIENT_UPLOAD,
+			CLIENT_DOWNLOAD,
+			CLIENT_LIST,
+			CLIENT_CHANGE_DIR,
+			RECVD_CMD_LINE,
+			SEND_REPLY,
+			TOO_MANY_PASS_TRIES,
+			NO_LOGIN_TIMEOUT,
+			NO_TRANSFER_TIMEOUT,
+			CLIENT_SOCK_ERROR,
+			CLIENT_SOFTWARE,
+			// Server event
+			START_LISTENING,
+			STOP_LISTENING,
+			START_ACCEPTING,
+			STOP_ACCEPTING,
+			MEM_ERROR,
+			THREAD_ERROR,
+		};
+
+
+		typedef void (*OnServerEventCallback_t) ( int Event );
+		typedef void (*OnUserEventCallback_t) ( int Event, FtpServer::UserEntry *pUser, void *pArg );
+		typedef void (*OnClientEventCallback_t) ( int Event, FtpServer::ClientEntry *pClient, void *pArg );
+		// Set the Server event callback
+		// pCallback: the callback function
+		void SetServerCallback(nServerEventCallback_t pCallback)
+			{_OnServerEventCb=pCallback;}
+		// Set the User event callback
+		// pCallback: the callback function
+		void SetUserCallback(OnUserEventCallback_t pCallback)
+			{_OnUserEventCb=pCallback;}
+		// Set the client event callback
+		// pCallback: the callback function
+		void SetClientCallback(OnClientEventCallback_t pCallback)
+			{_OnClientEventCb=pCallback;}
+		// call the server event callback
+		// Event: the callback arguments
+		void OnServerEventCb(int Event)
+			{if(_OnServerEventCb) _OnServerEventCb(Even );}
+		// call the user event callback
+		// Event: the callback arguments
+		// pUser: a pointer to the user class
+		// pArg: a pointer to something that depends on Event
+		void OnUserEventCb(int Event, FtpServer::UserEntry *pUser, void *pArg=NULL)
+			{if(_OnUserEventCb)_OnUserEventCb(Event, pUser, pArg);}
+		// call the client event callback
+		// Event: the callback arguments
+		// pClient: a pointer to the client class
+		// pArg: a pointer to something that depends on Event
+		void OnClientEventCb(int Event, FtpServer::ClientEntry *pClient, void *pArg=NULL)
+			{if(_OnClientEventCb)_OnClientEventCb(Event, pClient, pArg);}
+		
+		// USER
+
+		// Enumerate the different Privileges a User can get
+		enum
+		{
+			READFILE=0x1,
+			WRITEFILE=0x2,
+			DELETEFILE=0x4,
+			LIST=0x8,
+			CREATEDIR=0x10,
+			DELETEDIR=0x20
+		};
+		// Create a new User
+		// pszLogin     the User Name
+		// pszPass      the User Password, Can be NULL
+		// pszStartDir  the User Start directory
+		// return: on success a pointer to the newly created User
+		//         on error NULL
+		CUserEntry *AddUser(const char *pszLogin, const char *pszPass, const char *pszStartDir);
+		// Delete a User, and by the way all the Clients connected to this User
+		// return: true on success
+		//         false on error
+		bool DeleteUser(FtpServer::UserEntry *pUser);
+
+	private:
+		
+		// EVENTS
+
+		OnServerEventCallback_t _OnServerEventCb;
+		OnUserEventCallback_t _OnUserEventCb;
+		OnClientEventCallback_t _OnClientEventCb;
+		
 };
-
-/* struct used to build a table mapping command character sequences to
- *    their command token listed above */
-struct command_list{
-	char *command;
-	enum command_types command_code;
-};
-
-/* Lookup table for FTP Commands*/
-struct command_list command_lookup[] = {
-	{"USER", USER}, {"PASS", PASS}, {"ACCT", ACCT}, {"CWD", CWD},
-	{"CDUP", CDUP}, {"SMNT", SMNT}, {"REIN", REIN}, {"QUIT", QUIT},
-	{"PORT", PORT}, {"PASV", PASV}, {"TYPE", TYPE}, {"STRU", STRU},
-	{"MODE", MODE}, {"RETR", RETR}, {"STOR", STOR}, {"STOU", STOU},
-	{"APPE", APPE}, {"ALLO", ALLO}, {"REST", REST}, {"RNFR", RNFR},
-	{"RNTO", RNTO}, {"ABOR", ABOR}, {"DELE", DELE}, {"RMD", RMD},
-	{"MKD", MKD}, {"XMKD", MKD}, {"XRMD", RMD}, {"PWD", PWD},
-	{"XPWD", PWD}, {"LIST", LIST}, {"NLST", NLST}, {"SITE", SITE},
-	{"SIZE", SIZE}, {"SYST", SYST}, {"STAT", STAT}, {"HELP", HELP},
-	{"NOOP", NOOP}, {"EOFC", EOFC},
-};
-
-enum command_modes {LOGIN, PASSWORD, COMMANDS, EXIT};
-
-
 #endif
