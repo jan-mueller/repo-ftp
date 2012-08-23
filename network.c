@@ -25,21 +25,20 @@ int recvString(int socketfd, char *destBuffer){
     
     ptr = destBuffer;
     while(recv(socketfd,ptr,1,0)==1){
-        if(*ptr==END[endseq] && endseq < sizeof(END)-1 )
+        if(*ptr==END[endseq]){
             endseq++;
+        		if(endseq == sizeof(END)-1){
+            	*(ptr-(sizeof(END)))='\n';
+            	return receivedBytes;
+				}
+        }
         else
             endseq=0;
-        
-        if(endseq == sizeof(END)-2){
-            ptr--;
-            ptr='\0';
-            break;
-        }
         
         ptr++;
         receivedBytes++;
     }
-    return receivedBytes;
+    return 0;
 }
 
 int createBindSocket(int port){

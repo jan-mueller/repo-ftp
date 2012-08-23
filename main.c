@@ -1,5 +1,6 @@
 #include "network.h"
 #include "helpers.h"
+#include "command.h"
 
 #include <string.h>
 
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]){
         }
         
         handleConnection(acceptedSocket,&clientAddr);
+
     }
     shutdown(socket,SHUT_RDWR);
     return 0;
@@ -41,8 +43,25 @@ void handleConnection(int sockfd,struct sockaddr_in* clientAddr){
     int len;
     sendString(sockfd,"220 ftp.hack.me FTP server");
     
-    len = recvString(sockfd,buffer);
+	while(recvString(sockfd,buffer)){
+		if(strncasecmp(buffer, "USER anonymous", 14))
+			sendString(sockfd,USERFAILED " This FTP is anonymous only");
+		else
+			break;
+	}
     
-    
+	sendString(sockfd,USER" Please enter password");
+
+	while(recvString(sockfd,buffer)){
+		if(strncasecmp(buffer, "PASS", 4))
+			sendString(sockfd,USERFAILED" Please login with USER and PASS");
+		else
+			break;
+	}
+
+	sendString(sockfd,PASS" Login successful");
+	
+	len = recvString(sockfd,buffer);
+
     shutdown(sockfd,SHUT_RDWR);
 }

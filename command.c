@@ -3,7 +3,7 @@
  * Author: Jan Müller
  * 
  * Created: Aug 23 2012 17:50:49
- * Last Changes: Aug 23 2012 18:06:39
+ * Last Changes: Aug 23 2012 23:28:38
  *
  * E-mail: jan.mueller.online@gmail.com 
  * Description:
@@ -11,46 +11,48 @@
  *********************************************************/
 
 #include "command.h"
+
+
  
-int abor();
+int abor(){}
 
-int cwd();
+int cwd(){}
 
-int dele();
+int dele(){}
 
-int list();
+int list(){}
 
-int mdtm();
+int mdtm(){}
 
-int mkd();
+int mkd(){}
 
-int nlst();
+int nlst(){}
 
-int pass();
+int pass(){}
 
-int pasv();
+int pasv(){}
 
-int port();
+int port(){}
 
-int pwd();
+int pwd(){}
 
-int quit();
+int quit(){}
 
-int retr();
+int retr(){}
 
-int rmd();
+int rmd(){}
 
-int rnfr();
+int rnfr(){}
 
-int rnto();
+int rnto(){}
 
-int site();
+int site(){}
 
-int size();
+int size(){}
 
-int stor();
+int stor(){}
 
-int type();
+int type(){}
 
-int user();
+int user(){}
 
