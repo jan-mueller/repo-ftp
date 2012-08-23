@@ -11,6 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    
+#define END "\r\n"
 
 #include <sys/socket.h>
 #include <string.h>

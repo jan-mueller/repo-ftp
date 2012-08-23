@@ -7,7 +7,7 @@
 int sendString(int socketfd, char *buffer){
     int sentBytes,bytesToSend;
     bytesToSend = strlen(buffer);
-    
+
     while(bytesToSend > 0){
         sentBytes = send(socketfd,buffer,bytesToSend,0);
         if(sentBytes == -1){
@@ -23,9 +23,21 @@ int sendString(int socketfd, char *buffer){
 int recvString(int socketfd, char *destBuffer){
     int receivedBytes=0;
     char *ptr;
+    int endseq=0;
     
     ptr = destBuffer;
     while(recv(socketfd,ptr,1,0)==1){
+        if(*ptr==END[endseq] && endseq < sizeof(END)-1 )
+            endseq++;
+        else
+            endseq=0;
+        
+        if(endseq == sizeof(END)-2){
+            ptr--;
+            ptr='\0';
+            break;
+        }
+        
         ptr++;
         receivedBytes++;
     }

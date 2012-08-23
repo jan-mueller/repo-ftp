@@ -38,11 +38,12 @@ int main(int argc, char *argv[]){
 }
 
 void handleConnection(int sockfd,struct sockaddr_in* clientAddr){
-    char buffer[500];
+    char buffer[1024];
     int len;
-    printf("test");
+    sendString(sockfd,"220 ftp.hack.me FTP server");
+    
     len = recvString(sockfd,buffer);
-    printf("%s\n",buffer);
-    sendString(sockfd,buffer);
+    
+    
     shutdown(sockfd,SHUT_RDWR);
 }
