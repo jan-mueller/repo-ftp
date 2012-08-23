@@ -13,9 +13,11 @@ extern "C" {
 #endif
     
 #define END "\r\n"
+#include <string.h>
 
 #include <sys/socket.h>
-#include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
     
     /**
      * Function to send an given String over a Socket

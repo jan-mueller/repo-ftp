@@ -4,8 +4,7 @@
 #include <string.h>
 
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
 #include <netdb.h>
 
 void handleConnection(int sockfd,struct sockaddr_in *clientAddr);

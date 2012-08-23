@@ -1,5 +1,3 @@
-#include <netinet/in.h>
-
 #include "network.h"
 #include "helpers.h"
 
