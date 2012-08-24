@@ -9,6 +9,7 @@
 #include <netdb.h>
 
 void handleConnection(int sockfd,struct sockaddr_in *clientAddr);
+int running=1;
 
 int main(int argc, char *argv[]){
 
@@ -62,6 +63,12 @@ void handleConnection(int sockfd,struct sockaddr_in* clientAddr){
 	sendString(sockfd,PASS" Login successful");
 	
 	len = recvString(sockfd,buffer);
+	
+	if(!strncasecmp(buffer,"SYST",4)){
+		sendString(sockfd,SYST" UNIX Type: L8");
+	}
+	while(running);	
+
 
    shutdown(sockfd,SHUT_RDWR);
 }
