@@ -28,7 +28,7 @@ int recvString(int socketfd, char *destBuffer){
         if(*ptr==END[endseq]){
             endseq++;
         		if(endseq == sizeof(END)-1){
-            	*(ptr-(sizeof(END)))='\n';
+            	*(ptr+1-(sizeof(END)-1))='\0';
             	return receivedBytes;
 				}
         }

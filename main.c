@@ -39,29 +39,29 @@ int main(int argc, char *argv[]){
 }
 
 void handleConnection(int sockfd,struct sockaddr_in* clientAddr){
-    char buffer[1024];
-    int len;
-    sendString(sockfd,"220 ftp.hack.me FTP server");
-    
-	while(recvString(sockfd,buffer)){
-		if(strncasecmp(buffer, "USER anonymous", 14))
-			sendString(sockfd,USERFAILED " This FTP is anonymous only");
-		else
-			break;
-	}
-    
-	sendString(sockfd,USER" Please enter password");
+   char buffer[1024]={0};
+   int len;
 
-	while(recvString(sockfd,buffer)){
-		if(strncasecmp(buffer, "PASS", 4))
-			sendString(sockfd,USERFAILED" Please login with USER and PASS");
-		else
-			break;
+   sendString(sockfd,"220 ftp.hack.me FTP server");
+	recvString(sockfd,buffer);		
+
+	while(strncasecmp(buffer, "USER anonymous", 14)){
+		sendString(sockfd,USERFAILED " This FTP is anonymous only");
+		recvString(sockfd,buffer);		
+   }
+	
+	
+	sendString(sockfd,USER" Please enter password");
+	recvString(sockfd,buffer);
+
+	while(strncasecmp(buffer, "PASS ", 5)){
+		sendString(sockfd,USERFAILED" Please login with USER and PASS");
+		recvString(sockfd,buffer);
 	}
 
 	sendString(sockfd,PASS" Login successful");
 	
 	len = recvString(sockfd,buffer);
 
-    shutdown(sockfd,SHUT_RDWR);
+   shutdown(sockfd,SHUT_RDWR);
 }
